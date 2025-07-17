@@ -48,5 +48,6 @@ Approx. **2 hours**.
 ```bash
 git clone https://github.com/volsh/LeaksSPA.git
 cd LeaksSPA
+npm install
 npm run dev
 ```
