@@ -9,14 +9,6 @@ Approx. **2 hours**.
 
 ---
 
-## 🚀 Demo
-
-> _Replace with your Vercel/Netlify deployment link if hosted._
-
-[Live Demo](https://your-demo-url.com)
-
----
-
 ## 🧠 Features
 
 - ✅ Fully functional **SPA** using Next.js App Router
@@ -46,7 +38,6 @@ Approx. **2 hours**.
 
 - External logos are loaded directly; fallback is provided for broken image links.
 - Theme preferences are saved in localStorage and default to system if unset.
-- Clean, minimal animations were added for polish.
 
 ---
 
@@ -57,4 +48,5 @@ Approx. **2 hours**.
 ```bash
 git clone https://github.com/volsh/LeaksSPA.git
 cd LeaksSPA
+npm run dev
 ```
