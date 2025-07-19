@@ -25,6 +25,8 @@ export default function HomePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const hasMore = useRef(true);
+
   const closeModal = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("breach");
@@ -35,12 +37,17 @@ export default function HomePage() {
     try {
       setLoading(true);
       const res = await fetch(`/api/breaches?offset=${offset}`);
-      const data = await res.json();
+      const { items, error, total } = await res.json();
 
-      let newItems = data.items;
-
-      setBreaches((prev) => [...prev, ...newItems]);
-      setOffset((prev) => prev + PAGE_SIZE);
+      if (error) {
+        throw new Error(error);
+      }
+      if (offset + items.length < total) {
+        setOffset((prev) => prev + PAGE_SIZE);
+      } else {
+        hasMore.current = false;
+      }
+      setBreaches((prev) => [...prev, ...items]);
     } catch (err) {
       console.error("Failed to load breaches:", err);
     } finally {
@@ -53,7 +60,8 @@ export default function HomePage() {
     const handleScroll = () => {
       if (
         window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 100
+          document.body.offsetHeight - 100 &&
+        hasMore.current
       ) {
         fetchBreaches();
       }
