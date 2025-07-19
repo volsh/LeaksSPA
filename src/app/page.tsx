@@ -16,6 +16,7 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [filterVerified, setFilterVerified] = useState(false);
   const [filterSensitive, setFilterSensitive] = useState(false);
+  const [selectedBreach, setSelectedBreach] = useState<any | null>(null);
 
   const deferredSearch = useDeferredValue(search);
 
@@ -23,8 +24,6 @@ export default function HomePage() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  const selectedBreachName = searchParams.get("breach");
-  const selectedBreach = breaches.find((b) => b.Name === selectedBreachName);
 
   const closeModal = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -39,20 +38,6 @@ export default function HomePage() {
       const data = await res.json();
 
       let newItems = data.items;
-
-      // If selected breach isn't in the result, fetch it directly
-      if (
-        selectedBreachName &&
-        !data.items.some((b: Breach) => b.Name === selectedBreachName)
-      ) {
-        const singleRes = await fetch(
-          `/api/breaches?name=${encodeURIComponent(selectedBreachName)}`
-        );
-        const { item } = await singleRes.json(); // item may be null if not found
-        if (item) {
-          newItems = [item, ...newItems];
-        }
-      }
 
       setBreaches((prev) => [...prev, ...newItems]);
       setOffset((prev) => prev + PAGE_SIZE);
@@ -81,6 +66,24 @@ export default function HomePage() {
   useEffect(() => {
     fetchBreaches(); // initial load
   }, []);
+
+  useEffect(() => {
+    const name = searchParams.get("breach");
+
+    if (!name) return setSelectedBreach(null);
+
+    const existing = breaches.find((b) => b.Name === name);
+    if (existing) return setSelectedBreach(existing);
+
+    // If not found, fetch directly
+    fetch(`/api/breaches?name=${encodeURIComponent(name)}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject("Not found")))
+      .then(({ item }) => setSelectedBreach(item))
+      .catch((err) => {
+        console.error("Could not load selected breach:", err);
+        setSelectedBreach(null);
+      });
+  }, [searchParams, breaches]);
 
   const filteredBreaches = useMemo(
     () =>
@@ -163,7 +166,7 @@ export default function HomePage() {
       <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-inner">
         <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
           {filteredBreaches.map((breach, idx) => (
-            <div className="animate-fade-in" key={`${breach.Name}-${idx}`}>
+            <div key={`${breach.Name}-${idx}`} className="animate-fade-in">
               <BreachCard breach={breach} searchQuery={deferredSearch} />
             </div>
           ))}
