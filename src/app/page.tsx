@@ -5,6 +5,7 @@ import BreachCard from "@/components/BreachCard";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { useRouter, useSearchParams } from "next/navigation";
 import BreachDetailModal from "@/components/BreachDetailModal";
+import { Breach } from "@/types";
 
 const PAGE_SIZE = 10;
 
@@ -36,7 +37,24 @@ export default function HomePage() {
       setLoading(true);
       const res = await fetch(`/api/breaches?offset=${offset}`);
       const data = await res.json();
-      setBreaches((prev) => [...prev, ...data.items]);
+
+      let newItems = data.items;
+
+      // If selected breach isn't in the result, fetch it directly
+      if (
+        selectedBreachName &&
+        !data.items.some((b: Breach) => b.Name === selectedBreachName)
+      ) {
+        const singleRes = await fetch(
+          `/api/breaches?name=${encodeURIComponent(selectedBreachName)}`
+        );
+        const { item } = await singleRes.json(); // item may be null if not found
+        if (item) {
+          newItems = [item, ...newItems];
+        }
+      }
+
+      setBreaches((prev) => [...prev, ...newItems]);
       setOffset((prev) => prev + PAGE_SIZE);
     } catch (err) {
       console.error("Failed to load breaches:", err);
